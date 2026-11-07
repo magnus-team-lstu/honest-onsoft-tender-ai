@@ -12,7 +12,32 @@ from dashboard.theme import COLORS
 
 # Настройка страницы (обязательно в самом начале)
 st.set_page_config(page_title="Замеры ОНСОФТ", layout="wide", initial_sidebar_state="collapsed")
-
+# --- БОКОВАЯ ПАНЕЛЬ ---
+# --- БОКОВАЯ ПАНЕЛЬ ---
+with st.sidebar:
+    # Создаем путь к картинке, которая лежит в папке dashboard
+    logo_path = Path(__file__).parent / "logo.jpg"
+    
+    # Если файл существует, показываем его
+    if logo_path.exists():
+        st.image(str(logo_path), use_container_width=True)
+    else:
+        st.info("Логотип не найден")
+        
+        
+    st.title("Проект ОНСОФТ")
+    st.markdown("""
+    **Задача:** ИИ, который не обманывает.
+    
+    **Метрика:** Индекс доверия = *(верные − обманы) / все вопросы × 100*.
+    
+    **Команда:** 
+    - Участник A (Пайплайн)
+    - Участник B (Проверки)
+    - Участник C (Замеры и дашборд)
+    """)
+    st.divider()
+    st.caption("Сделано для ИТ-Феста Школы 21, ноябрь 2026.")
 # Загружаем данные
 runs = load_runs()
 
@@ -143,3 +168,51 @@ else:
                 st.markdown(f"❌ **Неверный ответ ИИ:** :red[{item['wrong_answer']}]")
                 st.markdown(f"🛡️ **Кто поймал:** {item['caught_by']}")
                 st.markdown(f"✅ **Исправленный ответ:** :green[{item['fixed_answer']}]")
+        st.divider()
+
+    # Панель 4: Расход и время
+    st.subheader("4. Расход ресурсов и время")
+    st.markdown("Показывает, во сколько обходится один полный прогон всех 71 вопросов (время и запросы к модели).")
+
+    col4_1, col4_2, col4_3 = st.columns(3)
+    with col4_1:
+        st.metric(label="Запросов к модели (было → стало)", value=f"{after['requests']}", delta=f"+{after['requests'] - before['requests']}", delta_color="inverse")
+    with col4_2:
+        st.metric(label="Потрачено токенов", value=f"{after['tokens']:,}", help="Токены — это условные единицы измерения текста для ИИ.")
+    with col4_3:
+        # Переводим секунды в минуты для красоты
+        minutes = after['seconds'] // 60
+        st.metric(label="Время на один набор (мин)", value=f"{minutes}")
+        st.divider()
+
+    # Панель 5: Вклад проверок
+    st.subheader("5. Вклад проверок (критиков)")
+    st.markdown("Сколько баллов индекса доверия добавила каждая проверка.")
+
+    from dashboard.data import load_critics
+    critics = load_critics()
+
+    if not critics:
+        st.info("Данные о вкладе проверок пока не готовы (будут после замеров B).")
+    else:
+        df_critics = pd.DataFrame(critics)
+        
+        # Считаем, сколько баллов добавила каждая проверка
+        df_critics["Добавлено баллов"] = df_critics["trust_after"] - df_critics["trust_before"]
+
+        # Рисуем горизонтальный график (чтобы названия помещались)
+        fig_critics = px.bar(
+            df_critics,
+            x="Добавлено баллов",
+            y="name",
+            orientation="h",
+            color_discrete_sequence=[COLORS["after"]], # Зеленый цвет
+            text_auto=".1f",
+            labels={"name": "", "Добавлено баллов": "Прирост индекса доверия"}
+        )
+        fig_critics.update_layout(
+            height=350, 
+            margin=dict(t=10, b=0, l=0, r=0),
+            yaxis=dict(autorange="reversed") # Чтобы первая проверка была сверху
+        )
+        st.plotly_chart(fig_critics, use_container_width=True)
