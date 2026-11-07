@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Проверка цитаты (дословно)",
+    "trust_before": 12.7,
+    "trust_after": 25.0
+  },
+  {
+    "name": "Проверка чисел в цитате",
+    "trust_before": 25.0,
+    "trust_after": 38.5
+  },
+  {
+    "name": "Изменения извещения",
+    "trust_before": 38.5,
+    "trust_after": 50.0
+  },
+  {
+    "name": "Детектор расхождений",
+    "trust_before": 50.0,
+    "trust_after": 58.0
+  }
+]
