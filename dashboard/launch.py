@@ -6,11 +6,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+from design.apply import sync_streamlit_config
+
 ROOT = Path(__file__).resolve().parents[1]
 APP = Path(__file__).resolve().parent / "app.py"
 
 
 def main() -> None:
+    sync_streamlit_config()
     page = sys.argv[1].lower() if len(sys.argv) > 1 else ""
     if page not in {"", "a", "b", "c"}:
         print("Команда: uv run dashboard [a|b|c]", file=sys.stderr)

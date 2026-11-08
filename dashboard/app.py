@@ -14,6 +14,8 @@ if str(ROOT) not in sys.path:
 
 from dashboard.charts import bars
 from dashboard.load import count_by, load_gold, load_packages, load_questions
+from design.copy import NAV_A, NAV_B, NAV_C, NAV_OVERVIEW, PAGE_TITLE
+from design.sidebar import render_sidebar
 
 
 def _render(filename: str):
@@ -75,35 +77,16 @@ def overview() -> None:
     )
 
 
-def _sidebar() -> None:
-    logo = Path(__file__).resolve().parent / "logo.jpg"
-    with st.sidebar:
-        if logo.is_file():
-            st.image(str(logo), use_container_width=True)
-        st.title("Проект ОНСОФТ")
-        st.markdown(
-            """
-**Задача:** ИИ, который не обманывает.
-
-**Метрика:** индекс доверия = *(верные − обманы) / все вопросы × 100*.
-
-**Команда:** A — пайплайн, B — проверки, C — замеры.
-"""
-        )
-        st.divider()
-        st.caption("ИТ-Фест Школы 21, ноябрь 2026.")
-
-
 def main() -> None:
-    st.set_page_config(page_title="Честный помощник ОНСОФТ", layout="wide", initial_sidebar_state="expanded")
-    _sidebar()
+    st.set_page_config(page_title=PAGE_TITLE, layout="wide", initial_sidebar_state="expanded")
+    render_sidebar()
     choice = _choice()
     navigation = st.navigation(
         [
-            st.Page(overview, title="Обзор", default=choice == ""),
-            st.Page(_render("01_A_пайплайн.py"), title="A. Пайплайн", url_path="a", default=choice == "a"),
-            st.Page(_render("02_B_проверки.py"), title="B. Проверки", url_path="b", default=choice == "b"),
-            st.Page(_render("03_C_графики.py"), title="C. Было / стало", url_path="c", default=choice == "c"),
+            st.Page(overview, title=NAV_OVERVIEW, default=choice == ""),
+            st.Page(_render("01_A_пайплайн.py"), title=NAV_A, url_path="a", default=choice == "a"),
+            st.Page(_render("02_B_проверки.py"), title=NAV_B, url_path="b", default=choice == "b"),
+            st.Page(_render("03_C_графики.py"), title=NAV_C, url_path="c", default=choice == "c"),
         ],
         expanded=True,
     )

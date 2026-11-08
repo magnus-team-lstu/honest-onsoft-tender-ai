@@ -5,14 +5,17 @@ from __future__ import annotations
 import plotly.express as px
 import plotly.graph_objects as go
 
-from dashboard.theme import COLORS
-
-_FONT = "Segoe UI, sans-serif"
-_VERDICT_COLORS = {
-    "верно": "#2e7d32",
-    "осторожно": "#f9a825",
-    "обман": "#c62828",
-}
+from design.theme import (
+    CHART_HEIGHT_BAR,
+    CHART_HEIGHT_CRITICS,
+    CHART_HEIGHT_TRUST,
+    CHART_HEIGHT_TYPES,
+    CHART_MARGIN_DEFAULT,
+    COLORS,
+    FONT_FAMILY,
+    VERDICT_COLORS,
+)
+from design.copy import CHART_TRUST_TITLE
 
 
 def bars(labels: list[str], values: list[int | float], title: str, *, horizontal: bool = False) -> go.Figure:
@@ -23,9 +26,9 @@ def bars(labels: list[str], values: list[int | float], title: str, *, horizontal
     figure = go.Figure(chart)
     figure.update_layout(
         title=title,
-        font={"family": _FONT},
-        margin={"l": 20, "r": 20, "t": 48, "b": 20},
-        height=max(320, 42 * len(labels)) if horizontal else 380,
+        font={"family": FONT_FAMILY},
+        margin=CHART_MARGIN_DEFAULT,
+        height=max(320, 42 * len(labels)) if horizontal else CHART_HEIGHT_BAR,
         yaxis={"autorange": "reversed"} if horizontal else {},
     )
     return figure
@@ -34,7 +37,7 @@ def bars(labels: list[str], values: list[int | float], title: str, *, horizontal
 def verdict_stack(by_type: dict[str, dict[str, int]], title: str) -> go.Figure:
     labels = sorted(by_type)
     figure = go.Figure()
-    for verdict, color in _VERDICT_COLORS.items():
+    for verdict, color in VERDICT_COLORS.items():
         figure.add_bar(
             name=verdict,
             x=labels,
@@ -44,7 +47,7 @@ def verdict_stack(by_type: dict[str, dict[str, int]], title: str) -> go.Figure:
     figure.update_layout(
         barmode="stack",
         title=title,
-        font={"family": _FONT},
+        font={"family": FONT_FAMILY},
         margin={"l": 20, "r": 20, "t": 48, "b": 80},
         height=420,
         legend={"orientation": "h"},
@@ -63,17 +66,17 @@ def index_pair(before: float, after: float) -> go.Figure:
         )
     )
     figure.update_layout(
-        title="Рост индекса доверия",
-        font={"family": _FONT},
-        margin={"l": 20, "r": 20, "t": 48, "b": 20},
-        height=400,
+        title=CHART_TRUST_TITLE,
+        font={"family": FONT_FAMILY},
+        margin=CHART_MARGIN_DEFAULT,
+        height=CHART_HEIGHT_TRUST,
         showlegend=False,
         yaxis={"range": [-100, 110]},
     )
     return figure
 
 
-def trust_bar(runs: list[dict[str, object]], title: str = "Рост индекса доверия") -> go.Figure:
+def trust_bar(runs: list[dict[str, object]], title: str = CHART_TRUST_TITLE) -> go.Figure:
     import pandas as pd
 
     frame = pd.DataFrame(runs)
@@ -87,7 +90,12 @@ def trust_bar(runs: list[dict[str, object]], title: str = "Рост индекс
         labels={"name": "Версия", "trust_index": "Индекс доверия"},
         title=title,
     )
-    figure.update_layout(showlegend=False, height=400, margin=dict(t=40, b=0, l=0, r=0), font={"family": _FONT})
+    figure.update_layout(
+        showlegend=False,
+        height=CHART_HEIGHT_TRUST,
+        margin=dict(t=40, b=0, l=0, r=0),
+        font={"family": FONT_FAMILY},
+    )
     return figure
 
 
@@ -113,10 +121,10 @@ def types_compare(before: dict[str, dict[str, int]], after: dict[str, dict[str, 
         text_auto=".0f",
     )
     figure.update_layout(
-        height=450,
+        height=CHART_HEIGHT_TYPES,
         margin=dict(t=20, b=0, l=0, r=0),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        font={"family": _FONT},
+        font={"family": FONT_FAMILY},
     )
     return figure
 
@@ -135,5 +143,10 @@ def critics_bar(critics: list[dict[str, object]]) -> go.Figure:
         text_auto=".1f",
         labels={"name": "", "Добавлено баллов": "Прирост индекса доверия"},
     )
-    figure.update_layout(height=350, margin=dict(t=10, b=0, l=0, r=0), yaxis=dict(autorange="reversed"), font={"family": _FONT})
+    figure.update_layout(
+        height=CHART_HEIGHT_CRITICS,
+        margin=dict(t=10, b=0, l=0, r=0),
+        yaxis=dict(autorange="reversed"),
+        font={"family": FONT_FAMILY},
+    )
     return figure

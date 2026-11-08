@@ -6,11 +6,12 @@ import streamlit as st
 
 from dashboard.charts import critics_bar, trust_bar, types_compare
 from dashboard.metrics import load_caught, load_critics, load_runs
+from design.copy import C_LEAD, C_TAB_CAUGHT, C_TAB_DETAILS, C_TAB_MAIN, C_TITLE
 
 
 def render() -> None:
-    st.title("Оценка качества ИИ")
-    st.markdown("Сравнение: как система работала **до** доработок и **после** (оценщик `data/check.py`).")
+    st.title(C_TITLE)
+    st.markdown(C_LEAD)
 
     runs = load_runs()
     caught = load_caught()
@@ -30,7 +31,7 @@ def render() -> None:
     before = runs[0] if has_pair else None
     after = runs[-1]
 
-    tab1, tab2, tab3 = st.tabs(["📊 Главное", "🛡️ Пойманные обманы", "⚙️ Детали замеров"])
+    tab1, tab2, tab3 = st.tabs([C_TAB_MAIN, C_TAB_CAUGHT, C_TAB_DETAILS])
 
     with tab1:
         st.subheader("1. Главная метрика: Индекс доверия")
