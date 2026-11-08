@@ -10,7 +10,7 @@ from dashboard.load import count_by, load_answers, load_cache
 
 def render() -> None:
     st.header("Пайплайн")
-    st.caption("Файл прогона: results/answers.csv. Кэш модели: .cache/llm. Код запуска — в src/.")
+    st.caption("Файл прогона: results/answers.csv. Кэш модели: .cache/llm. Код запуска - в src/.")
     answers = load_answers()
     cache = load_cache()
     left, middle, right = st.columns(3)
