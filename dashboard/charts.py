@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import plotly.express as px
 import plotly.graph_objects as go
+
+from dashboard.theme import COLORS
 
 _FONT = "Segoe UI, sans-serif"
 _VERDICT_COLORS = {
@@ -54,16 +57,83 @@ def index_pair(before: float, after: float) -> go.Figure:
         go.Bar(
             x=["было", "стало"],
             y=[before, after],
-            marker_color=["#90a4ae", "#1565c0"],
+            marker_color=[COLORS["before"], COLORS["after"]],
             text=[f"{before:.1f}", f"{after:.1f}"],
             textposition="outside",
         )
     )
     figure.update_layout(
-        title="Индекс доверия",
+        title="Рост индекса доверия",
         font={"family": _FONT},
         margin={"l": 20, "r": 20, "t": 48, "b": 20},
-        height=380,
+        height=400,
+        showlegend=False,
         yaxis={"range": [-100, 110]},
     )
+    return figure
+
+
+def trust_bar(runs: list[dict[str, object]], title: str = "Рост индекса доверия") -> go.Figure:
+    import pandas as pd
+
+    frame = pd.DataFrame(runs)
+    figure = px.bar(
+        frame,
+        x="name",
+        y="trust_index",
+        color="name",
+        color_discrete_map={"было": COLORS["before"], "стало": COLORS["after"]},
+        text_auto=".1f",
+        labels={"name": "Версия", "trust_index": "Индекс доверия"},
+        title=title,
+    )
+    figure.update_layout(showlegend=False, height=400, margin=dict(t=40, b=0, l=0, r=0), font={"family": _FONT})
+    return figure
+
+
+def types_compare(before: dict[str, dict[str, int]], after: dict[str, dict[str, int]]) -> go.Figure:
+    import pandas as pd
+
+    rows: list[dict[str, object]] = []
+    for q_type, stats in before.items():
+        total = max(int(stats["total"]), 1)
+        rows.append({"Тип вопроса": q_type, "Версия": "было", "Доля верных": stats["correct"] / total * 100})
+    for q_type, stats in after.items():
+        total = max(int(stats["total"]), 1)
+        rows.append({"Тип вопроса": q_type, "Версия": "стало", "Доля верных": stats["correct"] / total * 100})
+    frame = pd.DataFrame(rows)
+    figure = px.bar(
+        frame,
+        x="Тип вопроса",
+        y="Доля верных",
+        color="Версия",
+        barmode="group",
+        color_discrete_map={"было": COLORS["before"], "стало": COLORS["after"]},
+        labels={"Доля верных": "Процент верных ответов (%)", "Тип вопроса": ""},
+        text_auto=".0f",
+    )
+    figure.update_layout(
+        height=450,
+        margin=dict(t=20, b=0, l=0, r=0),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        font={"family": _FONT},
+    )
+    return figure
+
+
+def critics_bar(critics: list[dict[str, object]]) -> go.Figure:
+    import pandas as pd
+
+    frame = pd.DataFrame(critics)
+    frame["Добавлено баллов"] = frame["trust_after"] - frame["trust_before"]
+    figure = px.bar(
+        frame,
+        x="Добавлено баллов",
+        y="name",
+        orientation="h",
+        color_discrete_sequence=[COLORS["after"]],
+        text_auto=".1f",
+        labels={"name": "", "Добавлено баллов": "Прирост индекса доверия"},
+    )
+    figure.update_layout(height=350, margin=dict(t=10, b=0, l=0, r=0), yaxis=dict(autorange="reversed"), font={"family": _FONT})
     return figure

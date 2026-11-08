@@ -91,7 +91,7 @@ class LlmClient:
             if cached is not None:
                 return cached
         result = await self._call(messages, temperature, max_tokens)
-        if use_cache:
+        if use_cache and result["text"]:
             self._write_cache(messages, temperature, result)
         return result
 

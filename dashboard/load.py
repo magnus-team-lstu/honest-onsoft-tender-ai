@@ -121,6 +121,17 @@ def load_verdicts(path: Path | None = None) -> list[dict[str, object]]:
     return read_jsonl(path or RESULTS / "verdicts.jsonl")
 
 
+def load_critics_json(path: Path | None = None) -> list[dict[str, object]]:
+    source = path or RESULTS / "critics.json"
+    if not source.is_file():
+        return []
+    try:
+        data = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    return data if isinstance(data, list) else []
+
+
 def count_by(rows: list[dict[str, object]], key: str) -> list[tuple[str, int]]:
     counter: Counter[str] = Counter()
     for row in rows:

@@ -75,8 +75,28 @@ def overview() -> None:
     )
 
 
+def _sidebar() -> None:
+    logo = Path(__file__).resolve().parent / "logo.jpg"
+    with st.sidebar:
+        if logo.is_file():
+            st.image(str(logo), use_container_width=True)
+        st.title("Проект ОНСОФТ")
+        st.markdown(
+            """
+**Задача:** ИИ, который не обманывает.
+
+**Метрика:** индекс доверия = *(верные − обманы) / все вопросы × 100*.
+
+**Команда:** A — пайплайн, B — проверки, C — замеры.
+"""
+        )
+        st.divider()
+        st.caption("ИТ-Фест Школы 21, ноябрь 2026.")
+
+
 def main() -> None:
-    st.set_page_config(page_title="Честный помощник", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(page_title="Честный помощник ОНСОФТ", layout="wide", initial_sidebar_state="expanded")
+    _sidebar()
     choice = _choice()
     navigation = st.navigation(
         [

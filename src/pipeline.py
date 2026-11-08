@@ -84,7 +84,11 @@ async def answer_question(
     meter = usage or Usage()
     last = unknown(question_id)
     for _attempt in range(attempts):
-        result = await client.ask(_messages(question_id, question, context, notes), temperature=0)
+        result = await client.ask(
+            _messages(question_id, question, context, notes),
+            temperature=0,
+            max_tokens=4096,
+        )
         meter.add(result)
         try:
             last = parse_answer(str(result["text"]), question_id)

@@ -29,7 +29,7 @@ uv run dashboard c
 | --- | --- | --- |
 | A. Пайплайн | `src/`, `dashboard/screens/01_A_пайплайн.py` | `results/answers.csv`, `.cache/llm` |
 | B. Проверки | `src/checks/`, вердикты в `results/verdicts.jsonl` | `id`, `check`, `verdict` (`ok` или причина) |
-| C. Было / стало | `dashboard/charts.py`, `dashboard/screens/03_C_графики.py` | `results/eval.csv` или пара `results/eval_before.csv` и `results/eval_after.csv` |
+| C. Было / стало | `dashboard/charts.py`, `dashboard/metrics.py`, `dashboard/screens/03_C_графики.py` | `results/eval.csv` или пара `eval_before.csv` / `eval_after.csv`; демо критиков — `uv run python eval/make_mock.py` |
 
 Папка называется `screens`, а не `pages`: Streamlit забирает каталог `pages` под свой список страниц.
 

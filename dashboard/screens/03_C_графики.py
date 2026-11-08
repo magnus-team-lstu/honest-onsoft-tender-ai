@@ -1,67 +1,106 @@
-"""Страница C. Индекс рисуется из CSV оценщика. Новые графики — в dashboard/charts.py и в этом файле."""
+"""Страница C: панели участника C на реальных CSV и JSON из results/."""
 
 from __future__ import annotations
 
 import streamlit as st
 
-from dashboard.charts import bars, index_pair, verdict_stack
-from dashboard.load import count_by, load_eval, load_eval_pair, load_gold, summarize_eval
-
-
-def _show_summary(title: str, summary: dict[str, object]) -> None:
-    counts = summary["counts"]
-    assert isinstance(counts, dict)
-    index = float(summary["index"])
-    one, two, three, four = st.columns(4)
-    one.metric(title, f"{index:.1f}")
-    two.metric("Верно", counts["верно"])
-    three.metric("Осторожно", counts["осторожно"])
-    four.metric("Обман", counts["обман"])
-    by_type = summary["by_type"]
-    assert isinstance(by_type, dict)
-    st.plotly_chart(verdict_stack(by_type, "Разбивка по типам вопросов"), width="stretch")
-    lies = summary["lies"]
-    assert isinstance(lies, list)
-    if lies:
-        st.subheader("Где оценщик увидел обман")
-        st.dataframe(
-            [
-                {"id": row.get("id", ""), "type": row.get("type", ""), "why": row.get("why", "")}
-                for row in lies
-            ],
-            width="stretch",
-            hide_index=True,
-        )
+from dashboard.charts import critics_bar, trust_bar, types_compare
+from dashboard.metrics import load_caught, load_critics, load_runs
 
 
 def render() -> None:
-    st.header("Было / стало")
-    st.caption("Индекс считает data/check.py. Эта страница только рисует его CSV. Новые графики добавляй в dashboard/charts.py.")
-    before_rows, after_rows = load_eval_pair()
-    before = summarize_eval(before_rows)
-    after = summarize_eval(after_rows)
-    if before and after:
-        st.plotly_chart(
-            index_pair(float(before["index"]), float(after["index"])),
-            width="stretch",
+    st.title("Оценка качества ИИ")
+    st.markdown("Сравнение: как система работала **до** доработок и **после** (оценщик `data/check.py`).")
+
+    runs = load_runs()
+    caught = load_caught()
+    critics = load_critics()
+
+    if not runs:
+        st.warning(
+            "Нет замеров. Сначала прогон и оценка:\n\n"
+            "`uv run python -m src.run --questions data/questions.csv --packages data/packages --out results/answers.csv`\n\n"
+            "`uv run python data/check.py results/answers.csv --out results/eval.csv`"
         )
-        _show_summary("Стало", after)
-    else:
-        current = summarize_eval(load_eval())
-        if current:
-            _show_summary("Индекс доверия", current)
-            st.caption(
-                "Чтобы сравнить два замера, сохрани их как results/eval_before.csv и results/eval_after.csv."
+        st.caption("Для сравнения два прогона сохрани как `results/eval_before.csv` и `results/eval_after.csv`.")
+        st.caption("Демо вклада проверок: `uv run python eval/make_mock.py` → `results/critics.json`.")
+        return
+
+    has_pair = len(runs) >= 2 and runs[0]["name"] == "было" and runs[1]["name"] == "стало"
+    before = runs[0] if has_pair else None
+    after = runs[-1]
+
+    tab1, tab2, tab3 = st.tabs(["📊 Главное", "🛡️ Пойманные обманы", "⚙️ Детали замеров"])
+
+    with tab1:
+        st.subheader("1. Главная метрика: Индекс доверия")
+        st.markdown("Формула: *(верные − обманы) / все вопросы × 100*.")
+
+        col1, col2, col3 = st.columns(3)
+        if has_pair and before:
+            with col1:
+                st.metric(label="Было", value=f"{float(before['trust_index']):.1f}")
+            with col2:
+                delta = float(after["trust_index"]) - float(before["trust_index"])
+                st.metric(label="Стало", value=f"{float(after['trust_index']):.1f}", delta=f"{delta:+.1f}")
+        else:
+            with col1:
+                st.metric(label="Текущий прогон", value=f"{float(after['trust_index']):.1f}")
+        with col3:
+            st.metric(label="Всего вопросов", value=int(after["total"]))
+
+        st.plotly_chart(trust_bar(runs if has_pair else [after]), width="stretch")
+
+        if has_pair and before:
+            st.info("Индекс считается по CSV оценщика, не по mock-данным.")
+
+        st.divider()
+        st.subheader("2. Разбивка по типам вопросов")
+        if has_pair and before:
+            st.plotly_chart(
+                types_compare(before["by_type"], after["by_type"]),
+                width="stretch",
             )
         else:
-            st.info(
-                "Прогона ещё нет. Индекс появится после команды: "
-                "python data/check.py answers.csv --out results/eval.csv"
-            )
-    labels_values = count_by(load_gold(), "type")
-    if labels_values:
-        labels, values = zip(*labels_values, strict=True)
-        st.plotly_chart(
-            bars(list(labels), list(values), "Состав вопросов организатора, не прогон модели", horizontal=True),
-            width="stretch",
-        )
+            st.caption("Нужны оба файла `eval_before.csv` и `eval_after.csv` для сравнения по типам.")
+
+    with tab2:
+        st.subheader("3. Пойманные обманы")
+        st.markdown("Строки с вердиктом **обман** в `results/eval.csv` плюс ответы из `results/answers.csv`.")
+        if not caught:
+            st.success("В текущем замере обманов по оценщику нет.")
+        else:
+            types = ["Все"] + sorted({item["type"] for item in caught if item.get("type")})
+            selected = st.selectbox("Фильтр по типу:", types)
+            filtered = caught if selected == "Все" else [item for item in caught if item.get("type") == selected]
+            for item in filtered:
+                with st.expander(f"{item['id']} — {item.get('type', '')}"):
+                    st.markdown(f"**Вопрос:** {item.get('question', '')}")
+                    st.markdown(f"**Ответ модели:** {item.get('wrong_answer', '')}")
+                    st.markdown(f"**Почему обман:** {item.get('caught_by', '')}")
+                    st.markdown(f"**Ожидание организатора:** {item.get('fixed_answer', '')}")
+
+    with tab3:
+        st.subheader("4. Расход ресурсов")
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            if has_pair and before:
+                st.metric(
+                    label="Запросов в кэше (было → стало)",
+                    value=f"{int(after.get('requests', 0))}",
+                    delta=f"{int(after.get('requests', 0)) - int(before.get('requests', 0))}",
+                    delta_color="off",
+                )
+            else:
+                st.metric(label="Файлов в кэше LLM", value=int(after.get("requests", 0)))
+        with col_b:
+            st.metric(label="Токенов (из кэша)", value=f"{int(after.get('tokens', 0)):,}")
+        with col_c:
+            st.metric(label="Секунд в замере", value=int(after.get("seconds", 0)) or "—")
+
+        st.divider()
+        st.subheader("5. Вклад проверок (критиков)")
+        if not critics:
+            st.info("Пока нет `results/critics.json`. Заготовка: `uv run python eval/make_mock.py`.")
+        else:
+            st.plotly_chart(critics_bar(critics), width="stretch")
