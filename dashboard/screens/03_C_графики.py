@@ -24,7 +24,7 @@ def render() -> None:
             "`uv run python data/check.py results/answers.csv --out results/eval.csv`"
         )
         st.caption("Для сравнения два прогона сохрани как `results/eval_before.csv` и `results/eval_after.csv`.")
-        st.caption("Демо вклада проверок: `uv run python eval/make_mock.py` → `results/critics.json`.")
+        st.caption("Демо вклада проверок: `uv run python eval/make_mock.py` -> `results/critics.json`.")
         return
 
     has_pair = len(runs) >= 2 and runs[0]["name"] == "было" and runs[1]["name"] == "стало"
@@ -35,7 +35,7 @@ def render() -> None:
 
     with tab1:
         st.subheader("1. Главная метрика: Индекс доверия")
-        st.markdown("Формула: *(верные − обманы) / все вопросы × 100*.")
+        st.markdown("Формула: *(верные - обманы) / все вопросы * 100*.")
 
         col1, col2, col3 = st.columns(3)
         if has_pair and before:
@@ -51,9 +51,6 @@ def render() -> None:
             st.metric(label="Всего вопросов", value=int(after["total"]))
 
         st.plotly_chart(trust_bar(runs if has_pair else [after]), width="stretch")
-
-        if has_pair and before:
-            st.info("Индекс считается по CSV оценщика, не по mock-данным.")
 
         st.divider()
         st.subheader("2. Разбивка по типам вопросов")
@@ -75,7 +72,7 @@ def render() -> None:
             selected = st.selectbox("Фильтр по типу:", types)
             filtered = caught if selected == "Все" else [item for item in caught if item.get("type") == selected]
             for item in filtered:
-                with st.expander(f"{item['id']} — {item.get('type', '')}"):
+                with st.expander(f"{item['id']} - {item.get('type', '')}"):
                     st.markdown(f"**Вопрос:** {item.get('question', '')}")
                     st.markdown(f"**Ответ модели:** {item.get('wrong_answer', '')}")
                     st.markdown(f"**Почему обман:** {item.get('caught_by', '')}")
@@ -87,7 +84,7 @@ def render() -> None:
         with col_a:
             if has_pair and before:
                 st.metric(
-                    label="Запросов в кэше (было → стало)",
+                    label="Запросов в кэше (было -> стало)",
                     value=f"{int(after.get('requests', 0))}",
                     delta=f"{int(after.get('requests', 0)) - int(before.get('requests', 0))}",
                     delta_color="off",
@@ -97,7 +94,7 @@ def render() -> None:
         with col_b:
             st.metric(label="Токенов (из кэша)", value=f"{int(after.get('tokens', 0)):,}")
         with col_c:
-            st.metric(label="Секунд в замере", value=int(after.get("seconds", 0)) or "—")
+            st.metric(label="Секунд в замере", value=int(after.get("seconds", 0)) or "нет")
 
         st.divider()
         st.subheader("5. Вклад проверок (критиков)")
