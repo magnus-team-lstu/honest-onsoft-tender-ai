@@ -130,23 +130,38 @@ def types_compare(before: dict[str, dict[str, int]], after: dict[str, dict[str, 
 
 
 def critics_bar(critics: list[dict[str, object]]) -> go.Figure:
-    import pandas as pd
-
-    frame = pd.DataFrame(critics)
-    frame["Добавлено баллов"] = frame["trust_after"] - frame["trust_before"]
-    figure = px.bar(
-        frame,
-        x="Добавлено баллов",
-        y="name",
+    names = [str(item["name"]) for item in critics]
+    before = [float(item["trust_before"]) for item in critics]
+    after = [float(item["trust_after"]) for item in critics]
+    deltas = [right - left for left, right in zip(before, after)]
+    figure = go.Figure()
+    figure.add_bar(
+        name="до проверки",
+        y=names,
+        x=before,
         orientation="h",
-        color_discrete_sequence=[COLORS["after"]],
-        text_auto=".1f",
-        labels={"name": "", "Добавлено баллов": "Прирост индекса доверия"},
+        marker_color=COLORS["before"],
+        text=[f"{value:.1f}" for value in before],
+        textposition="outside",
+        cliponaxis=False,
+    )
+    figure.add_bar(
+        name="после",
+        y=names,
+        x=after,
+        orientation="h",
+        marker_color=COLORS["after"],
+        text=[f"{value:.1f} ({delta:+.1f})" for value, delta in zip(after, deltas)],
+        textposition="outside",
+        cliponaxis=False,
     )
     figure.update_layout(
-        height=CHART_HEIGHT_CRITICS,
-        margin=dict(t=10, b=0, l=0, r=0),
-        yaxis=dict(autorange="reversed"),
+        barmode="group",
+        height=max(CHART_HEIGHT_CRITICS, 64 * len(names)),
+        margin=dict(t=36, b=24, l=8, r=72),
+        yaxis=dict(autorange="reversed", automargin=True),
+        xaxis=dict(title="Индекс доверия", range=[0, 130], zeroline=False),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         font={"family": FONT_FAMILY},
     )
     return figure

@@ -1,24 +1,26 @@
-"""Палитра и типографика графиков Plotly."""
-
+# Цвета для графиков
 COLORS = {
-    "before": "#a0a0a0",
-    "after": "#1d9e75",
-    "deception": "#d85a30",
-    "unknown": "#f2a93b",
-    "bg": "#f7f5ef",
-    "text": "#1a1f2e",
+    "before": "#a0a0a0",      # Серый "было"
+    "after": "#1d9e75",       # Зеленый "стало"
+    "deception": "#d85a30",   # Красный "обман"
+    "unknown": "#f2a93b",     # Желтый "не знаю"
 }
 
-FONT_FAMILY = "Segoe UI, sans-serif"
-
+# Цвета для разных вердиктов (нужно для функции verdict_stack в charts.py)
 VERDICT_COLORS = {
-    "верно": "#2e7d32",
-    "осторожно": "#f9a825",
-    "обман": "#c62828",
+    "верно": COLORS["after"],
+    "осторожно": COLORS["unknown"],
+    "обман": COLORS["deception"],
 }
 
-CHART_MARGIN_DEFAULT = {"l": 20, "r": 20, "t": 48, "b": 20}
-CHART_HEIGHT_BAR = 380
-CHART_HEIGHT_TRUST = 400
-CHART_HEIGHT_TYPES = 450
-CHART_HEIGHT_CRITICS = 350
+# Шрифт
+FONT_FAMILY = "sans serif"
+
+# Размеры графиков (высота в пикселях)
+CHART_HEIGHT_TRUST = 400      # Главный график (Индекс доверия)
+CHART_HEIGHT_BAR = 400        # Запасной вариант
+CHART_HEIGHT_TYPES = 400      # Разбивка по типам вопросов
+CHART_HEIGHT_CRITICS = 300    # Вклад проверок
+
+# Отступы
+CHART_MARGIN_DEFAULT = dict(t=40, b=20, l=20, r=20)
