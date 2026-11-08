@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -37,6 +38,7 @@ def test_check_py_accepts_the_csv(tmp_path: Path) -> None:
         text=True,
         encoding="utf-8",
         cwd=ROOT / "data",
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     assert completed.returncode == 0
     assert "RESULT" in completed.stdout

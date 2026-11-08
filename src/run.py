@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import subprocess
 import sys
 import time
@@ -125,6 +126,7 @@ def score(args: argparse.Namespace, questions: list[dict[str, str]]) -> None:
         capture_output=True,
         text=True,
         encoding="utf-8",
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     print(completed.stdout)
     if completed.returncode != 0:
