@@ -136,3 +136,19 @@ def test_no_false_alarms_on_organizer_answers() -> None:
         verdicts = run_checks(_gold_answer(item), cache[item["package"]], item["question"])
         alarms += [(item["id"], name, verdict) for name, verdict in verdicts if verdict != "ok"]
     assert alarms == []
+
+
+@pytest.mark.skipif(not (DATA / "check.py").is_file(), reason="нет data/ организатора")
+def test_demo_on_eight_answers() -> None:
+    """Демо: 1 верный ответ и 7 обманов, каждую ловит своя проверка, индекс −75.0 → 12.5."""
+    import os
+    import subprocess
+    import sys
+
+    completed = subprocess.run(
+        [sys.executable, "-m", "src.checks.demo"],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"}, check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "Итог: -75.0 → 12.5" in completed.stdout
