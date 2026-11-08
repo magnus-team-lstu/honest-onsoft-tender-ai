@@ -34,6 +34,6 @@ uv run python -m src.checks.report --answers results/answers.csv
 uv run pytest tests/test_checks.py -q
 ```
 
-`report` пишет `results/verdicts.jsonl` для страницы B дашборда (`dashboard/screens/02_B_проверки.py`), `results/checks_report.json`
+`report` пишет `results/verdicts.jsonl` для страницы B дашборда (`dashboard/screens/02_B_checks.py`), `results/checks_report.json`
 и `results/critics.json` для графика вклада проверок у участника C.
 Тест на правильных ответах организатора следит, чтобы проверки не отклоняли верные ответы.
