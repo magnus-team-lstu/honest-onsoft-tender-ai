@@ -19,6 +19,9 @@
 #
 # Ответы модели кэшируются в .cache/llm: повторный прогон тех же вопросов
 # не тратит запросы. Чтобы спросить модель заново, удалите эту папку.
+#
+# @ перед командой: make не печатает саму команду, только её вывод.
+# Посмотреть, какие команды выполнит цель, не запуская их: make -n <цель>.
 
 # export передаёт переменную всем командам ниже и их дочерним процессам:
 # Python пишет вывод в UTF-8. Без этого на Windows ломается русский текст,
@@ -59,7 +62,7 @@ all: baseline full eval report
 # Когда ответы есть на все вопросы, run.py сам считает индекс доверия
 # через data/check.py и печатает его.
 baseline:
-	uv run python -m src.run --questions $(Q) --packages $(P) --out $(R)/answers_baseline.csv --mode baseline
+	@uv run python -m src.run --questions $(Q) --packages $(P) --out $(R)/answers_baseline.csv --mode baseline
 
 # Стало: полный пайплайн.
 # Запускает src/run.py в режиме full: в запрос идут только фрагменты пакета,
@@ -68,7 +71,7 @@ baseline:
 # до 3 попыток; не прошёл ни один ответ, тогда записывается «не знаю».
 # Пишет results/answers_full.csv и, как baseline, печатает индекс.
 full:
-	uv run python -m src.run --questions $(Q) --packages $(P) --out $(R)/answers_full.csv --mode full
+	@uv run python -m src.run --questions $(Q) --packages $(P) --out $(R)/answers_full.csv --mode full
 
 # Оценка организатора: data/check.py сравнивает ответы с data/answers_public.json.
 # Печатает индекс доверия (верно минус обман, в процентах от всех вопросов)
@@ -77,8 +80,8 @@ full:
 #   results/eval_after.csv   для ответов full
 # Модель не спрашивает. Нужны оба файла ответов (make baseline full).
 eval:
-	uv run python data/check.py $(R)/answers_baseline.csv --out $(R)/eval_before.csv
-	uv run python data/check.py $(R)/answers_full.csv --out $(R)/eval_after.csv
+	@uv run python data/check.py $(R)/answers_baseline.csv --out $(R)/eval_before.csv
+	@uv run python data/check.py $(R)/answers_full.csv --out $(R)/eval_after.csv
 
 # Вклад проверок: src/checks/report.py прогоняет все 7 проверок по ответам
 # baseline (их никто не проверял) и считает для каждой, сколько обманов она
@@ -90,7 +93,7 @@ eval:
 #   results/critics.json        прирост индекса по проверкам
 # Модель не спрашивает.
 report:
-	uv run python -m src.checks.report --answers $(R)/answers_baseline.csv
+	@uv run python -m src.checks.report --answers $(R)/answers_baseline.csv
 
 # Дашборд на Streamlit. Сначала make all: страницы читают файлы из results/.
 # 1-я команда копирует ответы и оценку full в results/answers.csv и
@@ -100,8 +103,8 @@ report:
 #   dashboard/app.py. Дашборд откроется на http://127.0.0.1:8501,
 #   остановить: Ctrl+C.
 dashboard:
-	uv run python -c "import shutil; shutil.copy('$(R)/answers_full.csv', '$(R)/answers.csv'); shutil.copy('$(R)/eval_after.csv', '$(R)/eval.csv')"
-	uv run dashboard
+	@uv run python -c "import shutil; shutil.copy('$(R)/answers_full.csv', '$(R)/answers.csv'); shutil.copy('$(R)/eval_after.csv', '$(R)/eval.csv')"
+	@uv run dashboard
 
 # Демо проверок без модели и без ключа: src/checks/demo.py.
 # Во временной копии пакета P01 дописывает в извещение фразу-инъекцию и
@@ -109,12 +112,12 @@ dashboard:
 # каждую проверку. Ожидаемый итог: индекс −75.0 без проверок и 12.5 с ними.
 # Файлы в data/ не меняются.
 demo:
-	uv run python -m src.checks.demo
+	@uv run python -m src.checks.demo
 
 # Тесты из папки tests/, -q даёт краткий вывод. Модель и ключ не нужны,
 # эти же тесты запускает GitHub Actions на каждый push и pull request.
 test:
-	uv run pytest -q
+	@uv run pytest -q
 
 # Контрольный набор на защите: тот же режим full, что в make full, но на
 # вопросах организатора. Пути передают при запуске:
@@ -123,4 +126,4 @@ test:
 # рядом с questions.csv лежат answers_public.json и check.py; иначе напишет,
 # что пропустил.
 control:
-	uv run python -m src.run --questions $(CQ) --packages $(CP) --out $(R)/answers_control.csv --mode full
+	@uv run python -m src.run --questions $(CQ) --packages $(CP) --out $(R)/answers_control.csv --mode full
