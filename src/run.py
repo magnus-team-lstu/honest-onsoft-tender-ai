@@ -15,6 +15,11 @@ from src.llm import LlmClient, make_client
 from src.pipeline import Usage, answer_question
 from src.schema import Answer, read_csv, write_csv
 
+try:  # проверки участника B; без них работает простая проверка цитаты
+    from src.checks import build_verify
+except ImportError:
+    build_verify = None
+
 
 @dataclass(frozen=True)
 class Report:
@@ -76,6 +81,7 @@ async def _answer_all(
             loaded[package_id],
             mode=mode,
             usage=usage,
+            verify=build_verify(row["question"]) if build_verify else None
         )
 
     return list(await asyncio.gather(*(one(row) for row in questions)))
