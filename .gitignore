@@ -155,6 +155,11 @@ activemq-data/
 .env
 .envrc
 .venv
+
+# Local run artifacts
+answers.csv
+logs.db
+results/
 env/
 venv/
 ENV/
@@ -220,3 +225,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.agents/
