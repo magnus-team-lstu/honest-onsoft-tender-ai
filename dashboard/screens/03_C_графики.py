@@ -75,7 +75,7 @@ def render() -> None:
             selected = st.selectbox("Фильтр по типу:", types)
             filtered = caught if selected == "Все" else [item for item in caught if item.get("type") == selected]
             for item in filtered:
-                with st.expander(f"{item['id']} — {item.get('type', '')}"):
+                with st.expander(f"{item['id']}: {item.get('type', '')}"):
                     st.markdown(f"**Вопрос:** {item.get('question', '')}")
                     st.markdown(f"**Ответ модели:** {item.get('wrong_answer', '')}")
                     st.markdown(f"**Почему обман:** {item.get('caught_by', '')}")
@@ -97,7 +97,7 @@ def render() -> None:
         with col_b:
             st.metric(label="Токенов (из кэша)", value=f"{int(after.get('tokens', 0)):,}")
         with col_c:
-            st.metric(label="Секунд в замере", value=int(after.get("seconds", 0)) or "—")
+            st.metric(label="Секунд в замере", value=int(after.get("seconds", 0)) or "нет")
 
         st.divider()
         st.subheader("5. Вклад проверок (критиков)")

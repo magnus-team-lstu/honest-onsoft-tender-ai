@@ -190,6 +190,7 @@ def make_client() -> LlmClient:
             messages=messages,  # type: ignore[arg-type]
             temperature=temperature,
             max_tokens=max_tokens,
+            extra_body={"enable_thinking": False},
         )
         content = response.choices[0].message.content or ""
         usage = response.usage
