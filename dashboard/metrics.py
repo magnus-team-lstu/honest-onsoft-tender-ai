@@ -98,9 +98,9 @@ def load_caught() -> list[dict[str, str]]:
                 "id": qid,
                 "type": row.get("type", ""),
                 "question": questions.get(qid, ""),
-                "wrong_answer": answer_row.get("answer", "—"),
+                "wrong_answer": answer_row.get("answer", "-"),
                 "caught_by": row.get("why", "") or "Оценщик data/check.py",
-                "fixed_answer": _gold_hint(gold_row) if gold_row else "—",
+                "fixed_answer": _gold_hint(gold_row) if gold_row else "-",
             }
         )
     path = RESULTS / "caught.json"
