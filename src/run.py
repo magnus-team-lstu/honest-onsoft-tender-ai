@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import subprocess
 import sys
 import time
@@ -13,7 +14,7 @@ from pathlib import Path
 from src.loader import Package, load_package, load_questions
 from src.llm import LlmClient, make_client
 from src.pipeline import Usage, answer_question
-from src.schema import Answer, read_csv, write_csv
+from src.schema import Answer, read_csv, unknown, write_csv
 
 try:  # проверки участника B; без них работает простая проверка цитаты
     from src.checks import build_verify
@@ -73,7 +74,11 @@ async def _answer_all(
     async def one(row: dict[str, str]) -> Answer:
         package_id = row["package"]
         if package_id not in loaded:
-            loaded[package_id] = load_package(packages / package_id)
+            try:
+                loaded[package_id] = load_package(packages / package_id)
+            except OSError as error:  # нет папки пакета: один вопрос не роняет весь прогон
+                print(f"{row['id']}: не прочитан пакет {package_id} ({error}), записано «не знаю»", file=sys.stderr)
+                return unknown(row["id"])
         return await answer_question(
             client,
             row["id"],
@@ -131,6 +136,7 @@ def score(args: argparse.Namespace, questions: list[dict[str, str]]) -> None:
         capture_output=True,
         text=True,
         encoding="utf-8",
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     print(completed.stdout)
     if completed.returncode != 0:

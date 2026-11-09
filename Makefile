@@ -40,8 +40,9 @@ R  := results
 
 # Контрольный набор для make control. ?= задаёт значение, только если
 # переменную не передали в командной строке или через окружение. Папки
-# control/ в репозитории нет: путь к выданному набору передают при запуске.
-CQ ?= control/questions.csv
+# control/ в репозитории нет: выданный архив распаковывают в control/.
+# Файл вопросов ищется как control/questions_control.csv, затем control/questions.csv.
+CQ ?= $(firstword $(wildcard control/questions_control.csv control/questions.csv) control/questions.csv)
 CP ?= control/packages
 
 # Имена целей не файлы. Без .PHONY make не запустил бы цель, если рядом
