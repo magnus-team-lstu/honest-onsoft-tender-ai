@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -84,11 +85,15 @@ async def answer_question(
     meter = usage or Usage()
     last = unknown(question_id)
     for _attempt in range(attempts):
-        result = await client.ask(
-            _messages(question_id, question, context, notes),
-            temperature=0,
-            max_tokens=4096,
-        )
+        try:
+            result = await client.ask(
+                _messages(question_id, question, context, notes),
+                temperature=0,
+                max_tokens=4096,
+            )
+        except Exception as error:  # сервер отказал, например запрос больше окна модели
+            print(f"{question_id}: модель не ответила ({type(error).__name__}), записано «не знаю»", file=sys.stderr)
+            return unknown(question_id)
         meter.add(result)
         try:
             last = parse_answer(str(result["text"]), question_id)
